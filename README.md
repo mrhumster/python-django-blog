@@ -859,3 +859,531 @@ $ cd frontend/
 $ npx @vue/cli add router
 $ npx @vue/cli add apollo
 ```
+
+Этим командам потребуется некоторое время для установки зависимостей, и они добавят или изменят некоторые файлы в 
+проекте для настройки и установки каждого плагина в вашем проекте Vue.
+
+## Шаг 5 Резюме
+Теперь вы сможете запустить сервер разработки Vue:
+
+```shell
+$ npm run serve
+```
+
+Теперь у вас есть приложение Django, `http://localhost:8000` работающее на `http://localhost:8080`.
+
+Посетите `http://localhost:8080` в своем браузере. Вы должны увидеть заставку Vue, которая указывает на то, что вы 
+все успешно установили. Если вы видите заставку, значит, вы готовы приступить к созданию собственных компонентов.
+
+# Шаг 6: Настройте Vue Router
+
+Важной частью клиентских приложений является обработка маршрутизации без необходимости делать новые запросы к серверу. 
+Распространенным решением для этого в Vue является подключаемый модуль Vue Router, который вы установили ранее. 
+Вы будете использовать Vue Router вместо обычных тегов привязки HTML для ссылок на разные страницы вашего блога.
+
+## Создадим маршруты
+
+Теперь, когда вы установили Vue Router, вам нужно настроить Vue для использования Vue Router. 
+Вам также необходимо настроить Vue Router с путями URL-адресов, которые он должен маршрутизировать.
+
+Создайте модуль в `src/router.js`. Этот файл будет содержать всю конфигурацию того, какие URL-адреса 
+соответствуют каким компонентам Vue. Начните с импорта Vue и Vue Router:
+
+```JS
+import Vue from 'vue'
+import VueRouter from 'vue-router'
+```
+Добавьте следующие импорты, каждый из которых соответствует компоненту, который вы вскоре создадите:
+
+```JS
+import Post from '@/components/Post'
+import Author from '@/components/Author'
+import PostsByTag from '@/components/PostsByTag'
+import AllPosts from '@/components/AllPosts'
+```
+
+Зарегистрируйте плагин Vue Router:
+```JS
+Vue.use(VueRouter)
+```
+
+Теперь вы создадите список маршрутов. Каждый маршрут имеет два свойства:
+
+ * *path* -— это шаблон URL-адреса, который может содержать переменные захвата, аналогичные шаблонам URL-адресов Django.
+ * *component* -— это компонент Vue, который отображается, когда браузер переходит к маршруту, соответствующему шаблону 
+пути.
+
+Добавьте эти маршруты как переменную `routes`. Они должны выглядеть следующим образом:
+
+```JS
+const routes = [
+  { path: '/author/:username', component: Author },
+  { path: '/post/:slug', component: Post },
+  { path: '/tag/:tag', component: PostsByTag },
+  { path: '/', component: AllPosts },
+]
+```
+
+Создайте новый экземпляр `VueRouter` и экспортируйте его из `router.js` модуля, чтобы другие модули могли его 
+использовать:
+
+```JS
+const router = new VueRouter({
+  routes: routes,
+  mode: 'history',
+})
+export default router
+```
+
+## Установите маршрутизатор
+
+В верхней части `src/main.js` импортируйте `router` из модуля, который вы создали в предыдущем разделе:
+
+```JS
+import router from '@/router'
+```
+
+Затем передайте маршрутизатор экземпляру Vue:
+
+```JS
+new Vue({
+  router,
+  ...
+})
+```
+
+## Шаг 6 Резюме
+
+Вы создали маршруты для внешнего интерфейса, которые сопоставляют шаблон URL-адреса с компонентом, который будет 
+отображаться по этому URL-адресу. Маршруты пока не будут работать, потому что они указывают на компоненты, которых 
+еще не существует. Вы создадите эти компоненты на следующем шаге.
+
+# Шаг 7: Создайте компоненты Vue
+
+Теперь, когда вы запустили и запустили Vue с маршрутами, которые будут идти к вашим компонентам, вы можете приступить 
+к созданию компонентов, которые в конечном итоге будут отображать данные из конечной точки GraphQL. На данный момент
+вы просто заставите их отображать некоторый статический контент. В таблице ниже описаны компоненты, которые вы 
+создадите:
+
+| Составная часть | Дисплеи                                                                         |
+|-----------------|---------------------------------------------------------------------------------|
+| AuthorLink      | Ссылка на страницу данного автора (используется в Postи PostList)               |
+| PostList        | Заданный список сообщений в блоге (используется в AllPosts, Authorи PostsByTag) |
+| AllPosts        | Список всех сообщений, начиная с самых последних                                |
+| PostsByTag      | Список сообщений, связанных с данным тегом, начиная с самых последних.          |
+| Post            | Метаданные и контент для данного поста                                          |
+| Author          | Информация об авторе и список написанных им сообщений                           |
+
+Вы обновите эти компоненты динамическими данными на следующем шаге.
+
+## Компонент `AuthorLink_`
+
+Первый компонент, который вы создадите, отображает ссылку на автора.
+
+Создайте файл `AuthorLink.vue` в каталоге `src/components/`. Этот файл представляет собой однофайловый компонент 
+`Vue (SFC)`. SFC содержат `HTML`, `JavaScript` и `CSS`, необходимые для правильной визуализации компонента.
+
+Принимает проп `AuthorLink`, `author` структура которого соответствует данным об авторах в вашем GraphQL API. 
+Компонент должен отображать имя и фамилию пользователя, если они указаны, или отображать имя пользователя в 
+противном случае.
+
+Ваш `AuthorLink.vue` файл должен выглядеть следующим образом:
+
+```vue
+<template>
+  <router-link
+      :to="`/author/${author.user.username}`"
+  >{{ displayName }}</router-link>
+</template>
+
+<script>
+export default {
+  name: 'AuthorLink',
+  props: {
+    author: {
+      type: Object,
+      required: true,
+    },
+  },
+  computed: {
+    displayName () {
+      return (
+        this.author.user.firstName &&
+        this.author.user.lastName &&
+        `${this.author.user.firstName} ${this.author.user.lastName}`
+      ) || `${this.author.user.username}`
+    },
+  },
+}
+</script>
+```
+
+Этот компонент не будет использовать GraphQL напрямую. Вместо этого другие компоненты будут передавать информацию 
+об авторе с помощью реквизита `author`.
+
+## Компонент `PostList_`
+
+Компонент `PostList` принимает проп `posts`, структура которого соответствует данным о постах в вашем GraphQL API. 
+Компонент также принимает логическое `showAuthor` свойство, которое вы установите `false` на странице автора, 
+потому что это избыточная информация. Компонент должен отображать следующие функции:
+
+ * Заголовок и подзаголовок поста, связывающие их со страницей поста
+ * Ссылка на автора поста с использованием AuthorLink(если showAuthorесть true)
+ * Дата публикации поста
+ * Мета-описание для поста
+ * Список тегов, связанных с постом
+
+Создайте  SFC `PostList.vue` в каталоге `src/components/`. Шаблон компонента должен выглядеть следующим образом:
+
+```html
+<template>
+  <div>
+    <ol class="post-list">
+      <li class="post" v-for="post in publishedPosts" :key="post.title">
+          <span class="post__title">
+            <router-link
+              :to="`/post/${post.slug}`"
+            >{{ post.title }}: {{ post.subtitle }}</router-link>
+          </span>
+          <span v-if="showAuthor">
+            by <AuthorLink :author="post.author" />
+          </span>
+          <div class="post__date">{{ displayableDate(post.publishDate) }}</div>
+        <p class="post__description">{{ post.metaDescription }}</p>
+        <ul>
+          <li class="post__tags" v-for="tag in post.tags" :key="tag.name">
+            <router-link :to="`/tag/${tag.name}`">#{{ tag.name }}</router-link>
+          </li>
+        </ul>
+      </li>
+    </ol>
+  </div>
+</template>
+```
+
+JavaScript компонента `PostList` должен выглядеть следующим образом:
+
+```html
+<script>
+import AuthorLink from '@/components/AuthorLink'
+
+export default {
+  name: 'PostList',
+  components: {
+    AuthorLink,
+  },
+  props: {
+    posts: {
+      type: Array,
+      required: true,
+    },
+    showAuthor: {
+      type: Boolean,
+      required: false,
+      default: true,
+    },
+  },
+  computed: {
+    publishedPosts () {
+      return this.posts.filter(post => post.published)
+    }
+  },
+  methods: {
+    displayableDate (date) {
+      return new Intl.DateTimeFormat(
+        'en-US',
+        { dateStyle: 'full' },
+      ).format(new Date(date))
+    }
+  },
+}
+</script>
+```
+
+Компонент `PostList` получает свои данные в виде `prop` вместо того, чтобы напрямую использовать GraphQL.
+
+Вы можете добавить дополнительные стили CSS, чтобы сделать список сообщений более читабельным после их отображения:
+
+```html
+<style>
+.post-list {
+  list-style: none;
+}
+
+.post {
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 1rem;
+}
+
+.post__title {
+  font-size: 1.25rem;
+}
+
+.post__description {
+  color: #777;
+  font-style: italic;
+}
+
+.post__tags {
+  list-style: none;
+  font-weight: bold;
+  font-size: 0.8125rem;
+}
+</style>
+```
+
+Эти стили добавляют некоторые интервалы, удаляют беспорядок и различают различные фрагменты информации, чтобы упростить сканирование.
+
+## Компонент `AllPosts_`
+
+Следующий компонент, который вы создадите, — это список всех сообщений в блоге. Он должен отображать две части 
+информации:
+
+* Заголовок «Последние сообщения»
+* Список постов, используя `PostList`
+
+Создайте SFC `AllPosts.vue` в каталоге `src/components/`. Это должно выглядеть следующим образом:
+
+```html
+<template>
+  <div>
+    <h2>Recent posts</h2>
+    <PostList v-if="allPosts" :posts="allPosts" />
+  </div>
+</template>
+
+<script>
+import PostList from '@/components/PostList'
+
+export default {
+  name: 'AllPosts',
+  components: {
+    PostList,
+  },
+  data () {
+    return {
+        allPosts: null,
+    }
+  },
+}
+</script>
+```
+
+Позже в этом руководстве вы динамически заполните переменную `allPosts` запросом GraphQL.
+
+## Компонент `PostsByTag_`
+
+Компонент `PostsByTag` очень похож на `AllPosts` компонент. Текст заголовка отличается, и на следующем шаге вы 
+запросите другой набор сообщений.
+
+Создайте SFC `PostsByTag.vue` в каталоге `src/components/`. Это должно выглядеть следующим образом:
+
+```html
+<template>
+  <div>
+    <h2>Posts in #{{ $route.params.tag }}</h2>
+    <PostList :posts="posts" v-if="posts" />
+  </div>
+</template>
+
+<script>
+import PostList from '@/components/PostList'
+
+export default {
+  name: 'PostsByTag',
+  components: {
+    PostList,
+  },
+  data () {
+    return {
+      posts: null,
+    }
+  },
+}
+</script>
+```
+
+Позже в этом руководстве вы заполните `posts` переменную запросом GraphQL.
+
+## Компонент `Author_`
+Компонент `Author` действует как страница профиля автора. Он должен отображать следующую информацию:
+
+* Заголовок с именем автора
+* Ссылка на сайт автора, если есть
+* Биография автора, если она указана
+* Список постов автора, с `showAuthor` установленным на `false`
+* 
+Создайте `Author.vue` SFC в `src/components/` каталоге сейчас. Это должно выглядеть следующим образом:
+
+```html
+<template>
+  <div v-if="author">
+    <h2>{{ displayName }}</h2>
+    <a
+      :href="author.website"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Website</a>
+    <p>{{ author.bio }}</p>
+
+    <h3>Posts by {{ displayName }}</h3>
+    <PostList :posts="author.postSet" :showAuthor="false" />
+  </div>
+</template>
+
+<script>
+import PostList from '@/components/PostList'
+
+export default {
+  name: 'Author',
+  components: {
+    PostList,
+  },
+  data () {
+    return {
+      author: null,
+    }
+  },
+  computed: {
+    displayName () {
+      return (
+        this.author.user.firstName &&
+        this.author.user.lastName &&
+        `${this.author.user.firstName} ${this.author.user.lastName}`
+      ) || `${this.author.user.username}`
+    },
+  },
+}
+</script>
+```
+
+Позже в этом руководстве вы динамически заполните `author` переменную запросом GraphQL.
+
+## Компонент `Post_`
+
+Как и модель данных, `Post` компонент представляет наибольший интерес, поскольку он отвечает за отображение всей 
+информации поста. Компонент должен отображать следующую информацию о публикации:
+
+* Название и подзаголовок, как заголовок
+* Автор, в качестве ссылки используя `AuthorLink`
+* Дата публикации
+* Мета-описание
+* Тело контента
+* Список связанных тегов в виде ссылок
+
+Из-за вашего моделирования данных и архитектуры компонентов вы можете быть удивлены тем, как мало кода для этого 
+требуется. Создайте `Post.vue` SFC в `src/components/` каталоге. Это должно выглядеть следующим образом:
+
+```html
+<template>
+  <div class="post" v-if="post">
+      <h2>{{ post.title }}: {{ post.subtitle }}</h2>
+      By <AuthorLink :author="post.author" />
+      <div>{{ displayableDate(post.publishDate) }}</div>
+    <p class="post__description">{{ post.metaDescription }}</p>
+    <article>
+      {{ post.body }}
+    </article>
+    <ul>
+      <li class="post__tags" v-for="tag in post.tags" :key="tag.name">
+        <router-link :to="`/tag/${tag.name}`">#{{ tag.name }}</router-link>
+      </li>
+    </ul>
+  </div>
+</template>
+
+<script>
+import AuthorLink from '@/components/AuthorLink'
+
+export default {
+  name: 'Post',
+  components: {
+    AuthorLink,
+  },
+  data () {
+    return {
+      post: null,
+    }
+  },
+  methods: {
+    displayableDate (date) {
+      return new Intl.DateTimeFormat(
+        'en-US',
+        { dateStyle: 'full' },
+      ).format(new Date(date))
+    }
+  },
+}
+</script>
+```
+
+## Компонент `App_`
+
+Прежде чем вы сможете увидеть результаты своего труда, вам необходимо обновить `App` компонент, созданный командой
+установки Vue. Вместо того, чтобы показывать заставку Vue, он должен отображать `AllPosts` компонент.
+
+Откройте `App.vue` SFC в `src/` каталоге. Вы можете удалить все содержимое внутри него, потому что вам нужно будет 
+заменить его кодом, который отображает следующие функции:
+
+* Заголовок с названием вашего блога, который ведет на главную страницу.
+* *<router-view>*, компонент Vue Router, который отображает нужный компонент для текущего маршрута.
+
+Ваш `App` компонент должен выглядеть следующим образом:
+
+```html
+<template>
+    <div id="app">
+        <header>
+          <router-link to="/">
+            <h1>Awesome Blog</h1>
+          </router-link>
+        </header>
+        <router-view />
+    </div>
+</template>
+
+<script>
+export default {
+  name: 'App',
+}
+</script>
+```
+
+Вы также можете добавить некоторые дополнительные стили CSS, чтобы немного улучшить отображение:
+
+```html
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  padding: 1.5rem;
+}
+
+* + * {
+  margin-top: 1.5rem;
+}
+
+#app {
+  margin: 0;
+  padding: 0;
+}
+</style>
+```
+
+Эти стили дают немного пространства большинству элементов на странице и удаляют пространство вокруг всей страницы, 
+которое большинство браузеров добавляет по умолчанию.
+
+## Шаг 7. Резюме
+
+Если вы раньше не пользовались Vue, этот шаг может показаться сложным. Однако вы достигли важной вехи. У вас есть 
+работающее приложение Vue с маршрутами и представлениями, готовыми для отображения данных.
+
+Вы можете убедиться, что ваше приложение работает, запустив сервер разработки Vue и посетив `http://localhost:8080`. 
+Вы должны увидеть название своего блога и заголовок «Последние сообщения». Если вы это сделаете, то вы готовы 
+сделать последний шаг, где вы будете использовать `Apollo` для запроса вашего GraphQL API, чтобы объединить 
+интерфейс и серверную часть.
+
