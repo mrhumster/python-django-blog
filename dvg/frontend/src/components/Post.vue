@@ -1,3 +1,4 @@
+<!-- dvg/frontend/src/components/Post.vue -->
 <template>
   <div class="post" v-if="post">
       <h2>{{ post.title }}: {{ post.subtitle }}</h2>
@@ -16,6 +17,7 @@
 </template>
 
 <script>
+import gql from 'graphql-tag'
 import AuthorLink from '@/components/AuthorLink'
 
 export default {
@@ -35,6 +37,34 @@ export default {
         { dateStyle: 'full' },
       ).format(new Date(date))
     }
+  },
+  async created() {
+    const post = await this.$apollo.query({
+        query: gql`query ($slug: String!) {
+          postBySlug(slug: $slug) {
+            title
+            subtitle
+            publishDate
+            metaDescription
+            slug
+            body
+            author {
+              user {
+                username
+                firstName
+                lastName
+              }
+            }
+            tags {
+              name
+            }
+          }
+        }`,
+        variables: {
+          slug: this.$route.params.slug,
+        },
+    })
+    this.post = post.data.postBySlug
   },
 }
 </script>`

@@ -5,7 +5,7 @@
             <h1>Awesome Blog</h1>
           </router-link>
         </header>
-        <router-view />
+        <router-view></router-view>
     </div>
 </template>
 

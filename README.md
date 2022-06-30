@@ -1387,3 +1387,331 @@ body {
 сделать последний шаг, где вы будете использовать `Apollo` для запроса вашего GraphQL API, чтобы объединить 
 интерфейс и серверную часть.
 
+# Шаг 8: Получить данные
+
+Теперь, когда у вас есть все необходимое для отображения данных, когда они доступны, пришло время получить эти данные из
+API GraphQL.
+
+Apollo делает запросы к GraphQL API более удобными. Плагин `Vue Apollo`, который вы установили ранее, интегрирует 
+Apollo в Vue, что делает гораздо более удобным выполнение запросов GraphQL из вашего проекта Vue.
+
+## Настройка `Vue Appolo`
+
+Vue Apollo в основном настраивается из коробки, но вам нужно будет указать ему правильную конечную точку для запроса. 
+Вы также можете отключить соединение `WebSocket`, которое он пытается использовать по умолчанию, потому что это создает 
+шум на вкладках «Сеть» и «Консоль» вашего браузера. Отредактируйте определение `apolloProvider`  в модуле `src/main.js`, 
+чтобы указать свойства `httpEndpoint` и :`wsEndpoint`
+
+```JS
+import { createApp, h } from 'vue'
+import App from './App.vue'
+import router from '@/router'
+
+import { ApolloClient } from 'apollo-client'
+import { createHttpLink } from 'apollo-link-http'
+import { InMemoryCache } from 'apollo-cache-inmemory'
+import { createApolloProvider } from '@vue/apollo-option'
+
+const cache = new InMemoryCache()
+
+const httpLink = createHttpLink({
+    uri: 'http://localhost:8000/graphql'
+})
+
+const apolloClient = new ApolloClient({
+  cache,
+  link: httpLink,
+})
+
+const apolloProvider = createApolloProvider({
+  defaultClient: apolloClient,
+})
+
+const app = createApp({
+  render: () => h(App),
+})
+
+app.use(router)
+app.use(apolloProvider)
+app.mount('#app')
+```
+
+Теперь вы готовы начать добавлять запросы для заполнения ваших страниц. Вы сделаете это, добавив функцию
+`created()` в несколько ваших SFC. `created()` -— это специальный хук жизненного цикла Vue, который 
+выполняется, когда компонент собирается отобразиться на странице. Вы можете использовать этот хук для 
+запроса данных, которые вы хотите отобразить, чтобы они стали доступны по мере рендеринга вашего 
+компонента. Вы создадите запрос для следующих компонентов:
+
+1) Post
+2) Author
+3) PostsByTag
+4) AllPosts
+
+Вы можете начать с создания запроса `Post`.
+
+## Запрос `Post`
+
+Запрос для отдельного поста принимает `slug` пост. Он должен возвращать все необходимые фрагменты 
+информации для отображения информации и контента поста.
+
+Вы будете использовать `$apollo.query`  и `gql` для создания запроса в функции `Post` компонента 
+`created()`, в конечном итоге используя ответ для установки компонента `post`, чтобы его можно 
+было отобразить. `created()` должно выглядеть следующим образом:
+
+```html
+<!-- dvg/frontend/src/components/Post.vue -->
+...
+<script>
+import gql from 'graphql-tag'
+import AuthorLink from '@/components/AuthorLink'
+
+export default {
+  ...
+  async created() {
+    const post = await this.$apollo.query({
+        query: gql`query ($slug: String!) {
+          postBySlug(slug: $slug) {
+            title
+            subtitle
+            publishDate
+            metaDescription
+            slug
+            body
+            author {
+              user {
+                username
+                firstName
+                lastName
+              }
+            }
+            tags {
+              name
+            }
+          }
+        }`,
+        variables: {
+          slug: this.$route.params.slug,
+        },
+    })
+    this.post = post.data.postBySlug
+  },
+}
+</script>`
+```
+
+Этот запрос извлекает большую часть данных о сообщении и связанном с ним авторе и тегах. Обратите 
+внимание, что заполнитель `$slug` используется в запросе, а переданное свойство `variables` используется
+`$apollo.query` для заполнения заполнителя. Свойство `slug` соответствует заполнителю `$slug` по имени. 
+Вы снова увидите этот шаблон в некоторых других запросах.
+
+## Запрос `Author`
+
+В то время как в запросе `Post` вы получили данные отдельного сообщения и некоторые вложенные данные об 
+авторе, в `Author` запросе вам нужно будет получить данные об авторе и список всех сообщений автора.
+
+Запрос автора принимает `username` желаемого автора и должен возвращать всю необходимую информацию для 
+отображения автора и списка его сообщений. Это должно выглядеть следующим образом:
+
+```html
+<!-- dvg/frontend/src/components/Author.vue -->
+...
+<script>
+import gql from 'graphql-tag'
+import PostList from '@/components/PostList'
+
+export default {
+  ...
+  async created() {
+    const user = await this.$apollo.query({
+      query: gql`query ($username: String!) {
+        authorByUsername(username: $username) {
+          website
+          bio
+          user {
+            firstName
+            lastName
+            username
+          }
+          postSet {
+            title
+            subtitle
+            publishDate
+            published
+            metaDescription
+            slug
+            tags {
+              name
+            }
+          }
+        }
+      }`,
+      variables: {
+        username: this.$route.params.username,
+      },
+    })
+    this.author = user.data.authorByUsername
+  },
+}
+</script>
+```
+
+В этом запросе используется `postSet`, что может показаться вам знакомым, если вы уже занимались 
+моделированием данных Django в прошлом. Название «набор сообщений» происходит от обратного отношения, 
+которое Django создает для `ForeignKey` поля. В этом случае сообщение имеет отношение внешнего ключа к его
+автору, которое имеет обратное отношение к сообщению с именем `post_set`. `Graphene-Django` автоматически 
+показал это, как `postSet` в GraphQL API.
+
+## Запрос `PostByTag`
+
+Запрос для `PostsByTag` должен быть очень похож на первые созданные вами запросы. Этот запрос принимает 
+желаемое `tag` и возвращает список соответствующих сообщений. `created()` должно выглядеть следующим 
+образом:
+
+```html
+<!-- dvg/frontend/src/components/PostsByTag.vue -->
+...
+import gql from 'graphql-tag'
+import PostList from '@/components/PostList'
+
+export default {
+  ...
+  async created () {
+    const posts = await this.$apollo.query({
+      query: gql`query ($tag: String!) {
+        postsByTag(tag: $tag) {
+          title
+          subtitle
+          publishDate
+          published
+          metaDescription
+          slug
+          author {
+            user {
+              username
+              firstName
+              lastName
+            }
+          }
+          tags {
+            name
+          }
+        }
+      }`,
+      variables: {
+        tag: this.$route.params.tag,
+      },
+    })
+    this.posts = posts.data.postsByTag
+  },
+}
+</script>
+```
+
+Вы могли заметить, что некоторые части каждого запроса очень похожи друг на друга. Хотя это не будет 
+рассматриваться в этом руководстве, вы можете использовать фрагменты GraphQL, чтобы уменьшить 
+дублирование кода запроса.
+
+## Запрос `AllPosts`
+
+Запрос для `AllPosts` не требует никакой входной информации и возвращает тот же набор информации, что и 
+`PostsByTag` запрос. Это должно выглядеть следующим образом:
+
+```html
+<!-- dvg/frontend/src/components/AllPosts.vue -->
+...
+<script>
+import gql from 'graphql-tag'
+import PostList from '@/components/PostList'
+
+export default {
+  ...
+  async created () {
+    const posts = await this.$apollo.query({
+      query: gql`query {
+        allPosts {
+          title
+          subtitle
+          publishDate
+          published
+          metaDescription
+          slug
+          author {
+            user {
+              username
+              firstName
+              lastName
+            }
+          }
+          tags {
+            name
+          }
+        }
+      }`,
+    })
+    this.allPosts = posts.data.allPosts;
+  },
+}
+</script>
+```
+
+Это последний запрос на данный момент, но вы должны пересмотреть последние пару шагов, чтобы они 
+усвоились. Если вы хотите добавить новые страницы с новыми представлениями ваших данных в будущем, 
+это вопрос создания маршрута, компонента , и запрос.
+
+## Шаг 8. Резюме
+Теперь, когда каждый компонент получает данные, необходимые для отображения, вы получили функционирующий 
+блог. Запустите сервер разработки Django и сервер разработки Vue. 
+
+Посетите `http://localhost:8080` и просмотрите свой блог. Если вы видите авторов, сообщения, теги и 
+содержание сообщения в своем браузере, вы молодец!
+
+# Следующие шаги
+
+Вы начали с создания серверной части блога Django для администрирования, сохранения и обслуживания данных 
+для блога. Затем вы создали внешний интерфейс Vue для использования и отображения этих данных. Вы 
+заставили их общаться с `GraphQL`, используя `Graphene` и `Apollo`.
+
+Возможно, вы уже задаетесь вопросом, что вы можете сделать дальше. Чтобы еще раз убедиться, что ваш блог 
+работает должным образом, вы можете попробовать следующее:
+
+* Добавьте больше пользователей и сообщений, чтобы они были разделены по авторам.
+* Сделайте некоторые сообщения неопубликованными, чтобы убедиться, что они не отображаются в блоге.
+
+
+Если вы чувствуете себя уверенно и авантюрно в том, что у вас есть, вы также можете продвинуть эту свою 
+систему еще дальше:
+
+* Расширьте свою модель данных, чтобы создать новое поведение в своем блоге Django.
+* Создавайте новые запросы, чтобы получать интересные представления о данных вашего блога.
+* Исследуйте мутации GraphQL, чтобы не только читать, но и записывать данные.
+* Добавьте CSS в свои однофайловые компоненты, чтобы сделать блог более привлекательным.
+
+Моделирование данных и архитектура компонентов, которые вы собрали вместе, удивительно расширяемы, так 
+что используйте их так, как вам нравится!
+
+Если вы хотите подготовить свое приложение Django к работе в прайм-тайм, 
+прочитайте [Развертывание Django + Python3 + PostgreSQL в AWS Elastic Beanstalk](https://realpython.com/deploying-a-django-app-and-postgresql-to-aws-elastic-beanstalk/)
+или [Разработка и развертывание Django в Fedora](https://realpython.com/development-and-deployment-of-cookiecutter-django-on-fedora/).
+Вы также можете использовать Amazon Web Services или что-то вроде [Netlify](https://netlify.com/) для 
+развертывания своего проекта Vue.
+
+# Вывод
+
+Вы видели, как можно использовать GraphQL для создания типизированных гибких представлений ваших данных. 
+Вы можете использовать эти же методы в существующем приложении Django, которое вы создали, или в том, 
+которое вы планируете создать. Как и другие API, вы можете использовать свой практически в любой 
+клиентской среде.
+
+В этом уроке вы узнали, как:
+
+* Создайте модель данных блога Django и интерфейс администратора.
+* Оберните свою модель данных в GraphQL API, используя Graphene-Django.
+* Создание и маршрутизация к отдельным компонентам Vue для каждого представления данных.
+* Динамически запрашивайте API GraphQL, чтобы заполнить ваши компоненты Vue с помощью Apollo.
+
+Вы рассмотрели много тем, поэтому постарайтесь определить несколько новых способов использования этих 
+понятий в разных контекстах, чтобы закрепить свое обучение. 
+
+Удачного кодирования и удачного ведения блога!
+
+Вы можете скачать полный исходный код для этого проекта, нажав на ссылку ниже:
