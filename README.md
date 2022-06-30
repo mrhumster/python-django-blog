@@ -1,4 +1,15 @@
-[Build a Blog Using Django, Vue, and GraphQL](https://realpython.com/python-django-blog/)
+![Badge](https://img.shields.io/badge/django-3.1.7-orange) ![Badge](https://img.shields.io/badge/graphene--django-2.14.0-orange) ![badge](https://img.shields.io/badge/vue-3.2.13-blue) ![badge](https://img.shields.io/badge/vue--apollo-3.0.0--beta.11-blue)
+
+> Данный файл является переводом статьи [Build a Blog Using Django, Vue, and GraphQL](https://realpython.com/python-django-blog/)
+> В репозитории присутствует используемый код.
+> На мой взгляд в данной статье удачно подобраны технологии, которые широко востребованы.
+>  * Django модель имеющая связи;
+>  * Использование GraphQL взамен REST;
+>  * Vue на фронте;
+>
+> Желаю успешного прохождение данного туториала.
+> 
+> ✌🕉
 
 # Введение
 
