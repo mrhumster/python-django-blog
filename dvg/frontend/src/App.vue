@@ -1,17 +1,15 @@
 <template>
     <div id="app">
-        <header>
-          <router-link to="/">
-            <h1>Awesome Blog</h1>
-          </router-link>
-        </header>
-        <router-view></router-view>
+        <NavBar />
+        <div class="container-fluid">
+            <router-view></router-view>  
+        </div>
     </div>
 </template>
 
 <script>
-export default {
-  name: 'App',
+  export default {
+    name: 'App',
 }
 </script>
 
@@ -23,7 +21,7 @@ export default {
 
 body {
   margin: 0;
-  padding: 1.5rem;
+  padding: 0;
 }
 
 * + * {
@@ -34,4 +32,5 @@ body {
   margin: 0;
   padding: 0;
 }
+
 </style>

@@ -1,24 +1,23 @@
 <!-- dvg/frontend/src/components/Post.vue -->
 <template>
-  <div class="post" v-if="post">
-      <h2>{{ post.title }}: {{ post.subtitle }}</h2>
-      By <AuthorLink :author="post.author" />
-      <div>{{ displayableDate(post.publishDate) }}</div>
-    <p class="post__description">{{ post.metaDescription }}</p>
-    <article>
-      {{ post.body }}
-    </article>
-    <ul>
-      <li class="post__tags" v-for="tag in post.tags" :key="tag.name">
-        <router-link :to="`/tag/${tag.name}`">#{{ tag.name }}</router-link>
-      </li>
-    </ul>
+  <div class="card post shadow" v-if="post">
+    <div class="card-body">
+      <h5 class="card-title">{{ post.title }}</h5>
+      <h6 class="card-subtitle mb-2 text-muted">{{ post.subtitle }}</h6>
+      <p class="post__description">{{ post.metaDescription }}</p>
+      <p class="card-text" v-html="mdhtml"></p>
+      <TagBadge :tag="tag.name" v-for="tag in post.tags" :key="tag.name"></TagBadge>
+    </div>
+    <div class="card-footer text-end">
+      <small class="text-muted">{{ displayableDate(post.publishDate) }} </small><AuthorLink :author="post.author" />
+    </div>
   </div>
 </template>
 
 <script>
 import gql from 'graphql-tag'
 import AuthorLink from '@/components/AuthorLink'
+import { marked } from 'marked';
 
 export default {
   name: 'MyPost',
@@ -28,6 +27,7 @@ export default {
   data () {
     return {
       post: null,
+      mdhtml: null,
     }
   },
   methods: {
@@ -64,7 +64,8 @@ export default {
           slug: this.$route.params.slug,
         },
     })
-    this.post = post.data.postBySlug
-  },
+    this.post = post.data.postBySlug;
+    this.mdhtml = marked(this.post.body);
+  }
 }
 </script>`

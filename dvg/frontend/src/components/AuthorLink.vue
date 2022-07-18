@@ -1,7 +1,7 @@
 <template>
   <router-link
       :to="`/author/${author.user.username}`"
-  >{{ displayName }}</router-link>
+  ><i class="bi bi-person"></i>{{ displayName }}</router-link>
 </template>
 
 <script>

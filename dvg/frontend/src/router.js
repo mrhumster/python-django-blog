@@ -4,7 +4,6 @@ import MyAuthor from '@/components/Author'
 import PostsByTag from '@/components/PostsByTag'
 import AllPosts from '@/components/AllPosts'
 
-
 const routes = [
   { path: '/author/:username', component: MyAuthor },
   { path: '/post/:slug', component: MyPost },

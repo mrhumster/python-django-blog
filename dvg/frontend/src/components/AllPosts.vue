@@ -1,7 +1,7 @@
 <!-- dvg/frontend/src/components/AllPosts.vue -->
 <template>
   <div>
-    <h2>Recent posts</h2>
+    <h2 class="text-center">Recent posts</h2>
     <PostList v-if="allPosts" :posts="allPosts" />
   </div>
 </template>

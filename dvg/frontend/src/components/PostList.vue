@@ -1,24 +1,18 @@
 <template>
-  <div>
-    <ol class="post-list">
-      <li class="post" v-for="post in publishedPosts" :key="post.title">
-          <span class="post__title">
-            <router-link
-              :to="`/post/${post.slug}`"
-            >{{ post.title }}: {{ post.subtitle }}</router-link>
-          </span>
-          <span v-if="showAuthor">
-            by <AuthorLink :author="post.author" />
-          </span>
-          <div class="post__date">{{ displayableDate(post.publishDate) }}</div>
-        <p class="post__description">{{ post.metaDescription }}</p>
-        <ul>
-          <li class="post__tags" v-for="tag in post.tags" :key="tag.name">
-            <router-link :to="`/tag/${tag.name}`">#{{ tag.name }}</router-link>
-          </li>
-        </ul>
+  <div class="mx-5 px-5">
+    <ul class="list-group">
+      <li class="list-group-item py-0 my-0" v-for="post in publishedPosts" :key="post.title">
+        <div class="py-1">
+          <router-link :to="`/post/${post.slug}`" class="post__link">«{{ post.title }}: {{ post.subtitle }}»
+          </router-link>
+          <small>
+            by <AuthorLink :author="post.author" class="author__link pe-1" />
+          </small>
+          <small class="text-muted postition-end">{{ displayableDate(post.publishDate) }}</small>
+          <TagBadge :tag="tag.name" v-for="tag in post.tags" :key="tag.name"></TagBadge>
+        </div>
       </li>
-    </ol>
+    </ul>
   </div>
 </template>
 
@@ -49,7 +43,7 @@ export default {
   methods: {
     displayableDate (date) {
       return new Intl.DateTimeFormat(
-        'en-US',
+        'ru-RU',
         { dateStyle: 'full' },
       ).format(new Date(date))
     }
@@ -57,27 +51,14 @@ export default {
 }
 </script>
 <style>
-.post-list {
-  list-style: none;
-}
-
-.post {
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 1rem;
-}
-
-.post__title {
-  font-size: 1.25rem;
-}
-
-.post__description {
-  color: #777;
-  font-style: italic;
-}
-
-.post__tags {
-  list-style: none;
-  font-weight: bold;
-  font-size: 0.8125rem;
-}
+  .badge-link {
+    color: white;
+    text-decoration: none;
+  }
+  .post__link {
+    text-decoration: none;
+  }
+  .author__link {
+    text-decoration: none;
+  }
 </style>

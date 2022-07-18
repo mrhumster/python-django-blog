@@ -1,7 +1,7 @@
 <!-- dvg/frontend/src/components/PostsByTag.vue -->
 <template>
   <div>
-    <h2>Posts in #{{ $route.params.tag }}</h2>
+    <h2 class="text-center">Posts in <TagBadge :tag="$route.params.tag"></TagBadge></h2>
     <PostList :posts="posts" v-if="posts" />
   </div>
 </template>
