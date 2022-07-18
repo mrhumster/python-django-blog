@@ -5,7 +5,7 @@
       <h5 class="card-title">{{ post.title }}</h5>
       <h6 class="card-subtitle mb-2 text-muted">{{ post.subtitle }}</h6>
       <p class="post__description">{{ post.metaDescription }}</p>
-      <p class="card-text" v-html="mdhtml"></p>
+      <MarkdownDisplay :markdown="post.body"></MarkdownDisplay>
       <TagBadge :tag="tag.name" v-for="tag in post.tags" :key="tag.name"></TagBadge>
     </div>
     <div class="card-footer text-end">
@@ -17,7 +17,7 @@
 <script>
 import gql from 'graphql-tag'
 import AuthorLink from '@/components/AuthorLink'
-import { marked } from 'marked';
+
 
 export default {
   name: 'MyPost',
@@ -27,17 +27,17 @@ export default {
   data () {
     return {
       post: null,
-      mdhtml: null,
     }
   },
   methods: {
     displayableDate (date) {
       return new Intl.DateTimeFormat(
-        'en-US',
+        'ru-RU',
         { dateStyle: 'full' },
       ).format(new Date(date))
     }
   },
+
   async created() {
     const post = await this.$apollo.query({
         query: gql`query ($slug: String!) {
@@ -65,7 +65,6 @@ export default {
         },
     })
     this.post = post.data.postBySlug;
-    this.mdhtml = marked(this.post.body);
   }
 }
-</script>`
+</script>
