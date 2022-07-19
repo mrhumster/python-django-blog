@@ -1,7 +1,7 @@
 <template>
-  <div class="mx-5 px-5">
+  <div>
     <ul class="list-group">
-      <li class="list-group-item py-0 my-0" v-for="post in publishedPosts" :key="post.title">
+      <li class="list-group-item py-0 my-0 shadow" v-for="post in publishedPosts" :key="post.title">
         <div class="py-1">
           <router-link :to="`/post/${post.slug}`" class="post__link">«{{ post.title }}: {{ post.subtitle }}»
           </router-link>

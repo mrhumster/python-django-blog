@@ -12,7 +12,7 @@ import { createApolloProvider } from '@vue/apollo-option';
 import NavBar from '@/components/NavBar';
 import TagBadge from '@/components/TagBadge';
 import MarkdownDisplay from '@/components/MarkdownDisplay';
-import marked from 'marked';
+
 
 
 const cache = new InMemoryCache()
@@ -40,5 +40,4 @@ app.component('TagBadge', TagBadge)
 app.component('MarkdownDisplay', MarkdownDisplay)
 app.use(router)
 app.use(apolloProvider)
-app.use(marked)
 app.mount('#app')

@@ -1,6 +1,6 @@
 from django.contrib import admin
-
 from blog.models import Profile, Post, Tag
+from blog.forms import PostModelForm
 
 
 @admin.register(Profile)
@@ -48,5 +48,6 @@ class PostAdmin(admin.ModelAdmin):
             "subtitle",
         )
     }
+
+    forms = PostModelForm
     date_hierarchy = "publish_date"
-    save_on_top = True

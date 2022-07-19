@@ -1,7 +1,7 @@
 <template>
-    <div id="app">
+    <div>
         <NavBar />
-        <div class="container-fluid">
+        <div class="container-fluid"  style="max-width: 60rem;">
             <router-view></router-view>  
         </div>
     </div>
@@ -29,8 +29,10 @@ body {
 }
 
 #app {
-  margin: 0;
-  padding: 0;
-}
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow-y: hidden; /* don't show content that exceeds my height */
 
+}
 </style>

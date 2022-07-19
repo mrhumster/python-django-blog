@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.forms import Textarea
 
 
 class Profile(models.Model):
@@ -37,4 +38,3 @@ class Post(models.Model):
 
     author = models.ForeignKey(Profile, on_delete=models.PROTECT)
     tags = models.ManyToManyField(Tag, blank=True)
-

@@ -27,6 +27,7 @@ export default {
   data () {
     return {
       post: null,
+      loading: true,
     }
   },
   methods: {
@@ -65,6 +66,9 @@ export default {
         },
     })
     this.post = post.data.postBySlug;
+    this.loading = false;
   }
 }
 </script>
+<style>
+</style>
